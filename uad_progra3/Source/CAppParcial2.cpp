@@ -176,7 +176,6 @@ bool CAppParcial2::loadTexture(const char *filename, unsigned int *newTextureID)
 	return true;
 }
 
-
 /* */
 bool CAppParcial2::initializeMenu()
 {
