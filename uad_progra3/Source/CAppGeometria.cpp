@@ -1,15 +1,10 @@
+#include "../Include/CWideStringHelper.h"
+#include "../Include/CAppGeometria.h"
+#include "../Include/Globals.h"
 #include "../stdafx.h"
-
 #include <iostream>
 #include <cmath>
 
-using namespace std;
-
-#include "../Include/Globals.h"
-#include "../Include/CAppGeometria.h"
-#include "../Include/CWideStringHelper.h"
-
-/* */
 CAppGeometria::CAppGeometria() :
 	CApp(CGameWindow::DEFAULT_WINDOW_WIDTH, CGameWindow::DEFAULT_WINDOW_HEIGHT)
 {
@@ -19,58 +14,66 @@ CAppGeometria::CAppGeometria() :
 	m_geoVAOID = 0;
 	m_shaderID = 0;
 	
+	m_numNormals = 0;
+	m_numFaces = 0;
+	m_numVertex = 0;
+
 	m_currentDeltaTime = 0;
 	m_objectRotation = 0;
 	m_objectPosition = CVector3::ZeroVector();
 	m_rotationSpeed = DEFAULT_ROTATION_SPEED;
 
-	// Initialize class member variables here
-	// ======================================
 	m_geoVAOID = 0;
 	m_shaderID = 0;
 	m_currentDeltaTime = 0;
 	m_objectRotation = 0;
 
-	m_vData = nullptr;
-	m_vIndices = nullptr;
-
-	m_nData = nullptr;
-	m_nIndices = nullptr;
-
 	m_initialized = false;
+	
+	m_vertexData = nullptr;
+	m_vertexIndex = nullptr;
 
-	m_objectPosition = CVector3::ZeroVector();
-	m_rotationSpeed = DEFAULT_ROTATION_SPEED;
-	// ======================================
+	m_normalsData = nullptr;
+	m_normalsIndex = nullptr;
+
+	m_UVData = nullptr;
+	m_UVIndex = nullptr;
 }
 
-/* */
 CAppGeometria::CAppGeometria(int window_width, int window_height) :
 	CApp(window_width, window_height)
 {
 	cout << "Constructor: CAppGeometria(int window_width, int window_height)" << endl;
 
-	// Initialize class member variables here
-	// ======================================
+	m_geoVAOID = 0;
+	m_shaderID = 0;
+
+	m_numNormals = 0;
+	m_numFaces = 0;
+	m_numVertex = 0;
+
+	m_currentDeltaTime = 0;
+	m_objectRotation = 0;
+	m_objectPosition = CVector3::ZeroVector();
+	m_rotationSpeed = DEFAULT_ROTATION_SPEED;
+
 	m_geoVAOID = 0;
 	m_shaderID = 0;
 	m_currentDeltaTime = 0;
 	m_objectRotation = 0;
 
-	m_vData = nullptr;
-	m_vIndices = nullptr;
-
-	m_nData = nullptr;
-	m_nIndices = nullptr;
-
 	m_initialized = false;
 
-	m_objectPosition = CVector3::ZeroVector();
-	m_rotationSpeed = DEFAULT_ROTATION_SPEED;
-	// ======================================
+	m_vertexData = nullptr;
+	m_vertexIndex = nullptr;
+
+	m_normalsData = nullptr;
+	m_normalsIndex = nullptr;
+
+	m_UVData = nullptr;
+	m_UVIndex = nullptr;
 }
 
-/* */
 CAppGeometria::~CAppGeometria()
 {
 	cout << "Destructor: ~CAppGeometria()" << endl;
@@ -80,26 +83,28 @@ CAppGeometria::~CAppGeometria()
 		getOpenGLRenderer()->freeGraphicsMemoryForObject(&m_shaderID, &m_geoVAOID);
 	}
 
-	// Free memory allocated in this class instance here
-	// =================================================
-	delete[] m_vData;
-	m_vData = nullptr;
+	delete[] m_vertexData;
+	m_vertexData = nullptr;
 
-	delete[] m_vData;
-	m_vData = nullptr;
+	delete[] m_vertexData;
+	m_vertexData = nullptr;
 	
-	delete[] m_vIndices;
-	m_vIndices = nullptr;
+	delete[] m_vertexIndex;
+	m_vertexIndex = nullptr;
 
-	delete[] m_nData;
-	m_nData = nullptr;
+	delete[] m_normalsData;
+	m_normalsData = nullptr;
 	
-	delete[] m_nIndices;
-	m_nIndices = nullptr;
-	// =================================================
+	delete[] m_normalsIndex;
+	m_normalsIndex = nullptr;
+
+	delete[] m_UVData;
+	m_UVData = nullptr;
+
+	delete[] m_UVIndex;
+	m_UVIndex = nullptr;
 }
 
-/* */
 void CAppGeometria::initialize()
 {
 	std::wstring wresourceFilenameVS;
@@ -130,16 +135,12 @@ void CAppGeometria::initialize()
 	if (m_shaderID > 0)
 	{
 		//CreatePiramid();
-		CreateSphere(2, 100, 100);
+		//CreateSphere(2, 8, 8);
+		LoadMesh();
 	}
 
-	// Initialize app-specific stuff here
-	// ==================================
-	//
-	// ==================================
 }
 
-/* */
 void CAppGeometria::run()
 {
 	// Check if CGameWindow object AND Graphics API specific Window library have been initialized
@@ -163,7 +164,6 @@ void CAppGeometria::run()
 	}
 }
 
-/* */
 void CAppGeometria::update(double deltaTime)
 {
 	double degreesToRotate = 0.0f;
@@ -200,7 +200,6 @@ void CAppGeometria::update(double deltaTime)
 	// ===============================
 }
 
-/* */
 void CAppGeometria::render()
 {
 	CGameMenu *menu = getMenu();
@@ -243,16 +242,21 @@ void CAppGeometria::render()
 	}
 }
 
-/* */
 void CAppGeometria::onMouseMove(float deltaX, float deltaY)
 {
-	// Update app-specific stuff when mouse moves here 
-	// ===============================================
-	//
-	// ===============================================
+	if (deltaX < 100.0f && deltaY < 100.0f)
+	{
+		float moveX = -deltaX * DEFAULT_CAMERA_MOVE_SPEED;
+		float moveZ = -deltaY * DEFAULT_CAMERA_MOVE_SPEED;
+
+		float currPos[3];
+		m_objectPosition.getValues(currPos);
+		currPos[0] += moveX;
+		currPos[2] += moveZ;
+		m_objectPosition.setValues(currPos);
+	}
 }
 
-/* */
 void CAppGeometria::executeMenuAction()
 {
 	if (getMenu() != NULL)
@@ -276,7 +280,7 @@ void CAppGeometria::CreatePiramid()
 
 	m_numFaces = 6;
 
-	float m_vData[15] =
+	float m_vertexData[15] =
 	{
 		0.0, h, 0.0,
 		-halfX, 0.0, halfZ,
@@ -285,7 +289,7 @@ void CAppGeometria::CreatePiramid()
 		halfX, 0.0, -halfZ,
 	};
 
-	unsigned short m_vIndices[18] =
+	unsigned short m_vertexIndex[18] =
 	{
 		0,1,2,
 		0,2,4,
@@ -295,7 +299,7 @@ void CAppGeometria::CreatePiramid()
 		4,3,1
 	};
 
-	float m_nData[18] = 
+	float m_normalsData[18] = 
 	{
 		0.0, 0.0, 0.0,
 		0.0, 0.0, 0.0,
@@ -305,7 +309,7 @@ void CAppGeometria::CreatePiramid()
 		0.0, 0.0, 0.0,
 	};
 
-	unsigned short m_nIndices[18] =
+	unsigned short m_normalsIndex[18] =
 	{
 		0, 0, 0,
 		1, 1, 1,
@@ -318,17 +322,17 @@ void CAppGeometria::CreatePiramid()
 	loaded = getOpenGLRenderer()->allocateGraphicsMemoryForObject(
 		&m_shaderID,
 		&m_geoVAOID,
-		m_vData,			// vertices
+		m_vertexData,			// vertices
 		5,				// Numero de vertices
-		m_nData,			// Normales
+		m_normalsData,			// Normales
 		6,				// Numero de normales
-		m_vData,			// UV coords
+		m_vertexData,			// UV coords
 		5,				// Numero de UV coords
-		m_vIndices,		// Indices de vertices
+		m_vertexIndex,		// Indices de vertices
 		6,				// Numero de vertices
-		m_nIndices,		// Indices a normales
+		m_normalsIndex,		// Indices a normales
 		6,				// Numero de indices a normales
-		m_vIndices,		// Indices a las UV coords
+		m_vertexIndex,		// Indices a las UV coords
 		6				// Numero de indices a UV coords
 		);
 
@@ -359,21 +363,21 @@ void CAppGeometria::CreateSphere(float Radius, int Horizontal, int Vertical)
 	float v1v3[3], v1v2[3], normal[3];
 
 	//Numero de vertices
-	m_vData = new float[m_numVertex * 3];
+	m_vertexData = new float[m_numVertex * 3];
 	//Indices de los vertices
-	m_vIndices = new unsigned short[m_numFaces * 3];
+	m_vertexIndex = new unsigned short[m_numFaces * 3];
 
 	//Normales
-	m_nData = new float[m_numFaces * 3];
+	m_normalsData = new float[m_numFaces * 3];
 	//Indices de las normales
-	m_nIndices = new unsigned short[m_numFaces * 3];
+	m_normalsIndex = new unsigned short[m_numFaces * 3];
 	//--------------------------------------------------------
 
 	int iLoop = 1;
 	int currentVertex = 0;
 
-	float currentRadius = radius * sin((hDegrees * iLoop) * DEDREES_TO_RADIANS);
-	float height = radius * cos((hDegrees * iLoop) * DEDREES_TO_RADIANS);
+	float currentRadius = radius * sin((hDegrees * iLoop) * DEGREES_TO_RADIANS);
+	float height = radius * cos((hDegrees * iLoop) * DEGREES_TO_RADIANS);
 
 	//--------------------------------------------------------
 	//Calculo las posiciones de los vertices
@@ -382,27 +386,27 @@ void CAppGeometria::CreateSphere(float Radius, int Horizontal, int Vertical)
 		if (divisionsV == currentVertex)
 		{
 			iLoop++;
-			currentRadius = radius * sin((hDegrees * iLoop) * DEDREES_TO_RADIANS);
-			height = radius * cos((hDegrees * iLoop) * DEDREES_TO_RADIANS);
+			currentRadius = radius * sin((hDegrees * iLoop) * DEGREES_TO_RADIANS);
+			height = radius * cos((hDegrees * iLoop) * DEGREES_TO_RADIANS);
 
 			currentVertex = 0;
 		}
 
 		if (iLoop < divisionsV)
 		{
-			m_vData[i] = currentRadius * cos((vDegrees * currentVertex) * DEDREES_TO_RADIANS);
-			m_vData[i + 1] = height;
-			m_vData[i + 2] = currentRadius * sin((vDegrees * currentVertex) * DEDREES_TO_RADIANS);
+			m_vertexData[i] = currentRadius * cos((vDegrees * currentVertex) * DEGREES_TO_RADIANS);
+			m_vertexData[i + 1] = height;
+			m_vertexData[i + 2] = currentRadius * sin((vDegrees * currentVertex) * DEGREES_TO_RADIANS);
 		}
 
 		else
 		{
-			m_vData[i] = 0;
-			m_vData[++i] = radius;
-			m_vData[++i] = 0;
-			m_vData[++i] = 0;
-			m_vData[++i] = -radius;
-			m_vData[++i] = 0;
+			m_vertexData[i] = 0;
+			m_vertexData[++i] = radius;
+			m_vertexData[++i] = 0;
+			m_vertexData[++i] = 0;
+			m_vertexData[++i] = -radius;
+			m_vertexData[++i] = 0;
 		}
 
 		currentVertex++;
@@ -423,67 +427,67 @@ void CAppGeometria::CreateSphere(float Radius, int Horizontal, int Vertical)
 
 		if (iLoop < divisionsH)
 		{
-			m_vIndices[i] = ((iLoop - 1) * divisionsV) + currentVertex;
+			m_vertexIndex[i] = ((iLoop - 1) * divisionsV) + currentVertex;
 
 			if (currentVertex == divisionsH)
 			{
-				m_vIndices[i + 1] = ((iLoop - 1) * divisionsV);
-				m_vIndices[i + 3] = (iLoop - 1) * divisionsV;
-				m_vIndices[i + 4] = (((iLoop - 1) * divisionsV) + divisionsV);
+				m_vertexIndex[i + 1] = ((iLoop - 1) * divisionsV);
+				m_vertexIndex[i + 3] = (iLoop - 1) * divisionsV;
+				m_vertexIndex[i + 4] = (((iLoop - 1) * divisionsV) + divisionsV);
 			}
 
 			else
 			{
-				m_vIndices[i + 1] = (((iLoop - 1) * divisionsV) + 1) + currentVertex;
-				m_vIndices[i + 3] = (((iLoop - 1) * divisionsV) + 1) + currentVertex;
-				m_vIndices[i + 4] = (((iLoop - 1) * divisionsV) + 1 + divisionsV) + currentVertex;
+				m_vertexIndex[i + 1] = (((iLoop - 1) * divisionsV) + 1) + currentVertex;
+				m_vertexIndex[i + 3] = (((iLoop - 1) * divisionsV) + 1) + currentVertex;
+				m_vertexIndex[i + 4] = (((iLoop - 1) * divisionsV) + 1 + divisionsV) + currentVertex;
 			}
 
-			m_vIndices[i + 2] = (((iLoop - 1) * divisionsV) + divisionsV) + currentVertex;
-			m_vIndices[i + 5] = (((iLoop - 1) * divisionsV) + divisionsV) + currentVertex;
+			m_vertexIndex[i + 2] = (((iLoop - 1) * divisionsV) + divisionsV) + currentVertex;
+			m_vertexIndex[i + 5] = (((iLoop - 1) * divisionsV) + divisionsV) + currentVertex;
 		}
 
 		else
 		{
-			unsigned short bottomVertex = m_vIndices[i - 1] + 1;
+			unsigned short bottomVertex = m_vertexIndex[i - 1] + 1;
 			unsigned short topVertex = bottomVertex + 1;
 
 			unsigned short topLoop = (divisionsH * divisionsV) - divisionsV;
 
 			for (int j = 0; j < divisionsV; j += 2)
 			{
-				m_vIndices[i++] = topLoop + j;
-				m_vIndices[i++] = topLoop + j + 1;
-				m_vIndices[i++] = topVertex;
+				m_vertexIndex[i++] = topLoop + j;
+				m_vertexIndex[i++] = topLoop + j + 1;
+				m_vertexIndex[i++] = topVertex;
 
-				m_vIndices[i++] = topLoop + j + 1;
+				m_vertexIndex[i++] = topLoop + j + 1;
 
-				m_vIndices[i++] = topLoop + j + 2;
+				m_vertexIndex[i++] = topLoop + j + 2;
 
-				if (m_vIndices[i - 1] >= (topLoop + divisionsV))
+				if (m_vertexIndex[i - 1] >= (topLoop + divisionsV))
 				{
-					m_vIndices[i - 1] = topLoop;
+					m_vertexIndex[i - 1] = topLoop;
 				}
 
-				m_vIndices[i++] = topVertex;
+				m_vertexIndex[i++] = topVertex;
 			}
 
 			for (int j = 0; j < divisionsV; j += 2)
 			{
-				m_vIndices[i++] = bottomVertex;
-				m_vIndices[i++] = j + 1;
-				m_vIndices[i++] = j;
+				m_vertexIndex[i++] = bottomVertex;
+				m_vertexIndex[i++] = j + 1;
+				m_vertexIndex[i++] = j;
 
-				m_vIndices[i++] = bottomVertex;
+				m_vertexIndex[i++] = bottomVertex;
 
-				m_vIndices[i++] = j + 2;
+				m_vertexIndex[i++] = j + 2;
 
-				if (m_vIndices[i - 1] >= divisionsV)
+				if (m_vertexIndex[i - 1] >= divisionsV)
 				{
-					m_vIndices[i - 1] = 0;
+					m_vertexIndex[i - 1] = 0;
 				}
 
-				m_vIndices[i++] = j + 1;
+				m_vertexIndex[i++] = j + 1;
 			}
 		}
 
@@ -494,19 +498,19 @@ void CAppGeometria::CreateSphere(float Radius, int Horizontal, int Vertical)
 	//Le asigno el valor 0 a todos los indices
 	for (int i = 0; i < m_numFaces; i += 3)
 	{
-		m_nData[i] = 0.0f;
-		m_nData[i + 1] = 0.0f;
-		m_nData[i + 2] = 0.0f;
+		m_normalsData[i] = 0.0f;
+		m_normalsData[i + 1] = 0.0f;
+		m_normalsData[i + 2] = 0.0f;
 	}
 
-	//m_nIndices
+	//m_normalsIndex
 	int nIndex = 0;
 
 	for (int i = 0; i < m_numFaces * 3; i += 3)
 	{
-		m_nIndices[i] = nIndex;
-		m_nIndices[i + 1] = nIndex;
-		m_nIndices[i + 2] = nIndex;
+		m_normalsIndex[i] = nIndex;
+		m_normalsIndex[i + 1] = nIndex;
+		m_normalsIndex[i + 2] = nIndex;
 
 		nIndex++;
 	}
@@ -515,18 +519,18 @@ void CAppGeometria::CreateSphere(float Radius, int Horizontal, int Vertical)
 	loaded = getOpenGLRenderer()->allocateGraphicsMemoryForObject(
 		&m_shaderID,
 		&m_geoVAOID,
-		m_vData,			// vertices
-		m_numVertex,	// Numero de vertices
-		m_nData,			// Normales
-		m_numFaces,		// Numero de normales
-		m_vData,			// UV coords
-		m_numVertex,	// Numero de UV coords
-		m_vIndices,		// Indices de vertices
-		m_numFaces,		// Numero de vertices
-		m_nIndices,		// Indices a normales
-		m_numFaces,		// Numero de indices a normales
-		m_vIndices,		// Indices a las UV coords
-		m_numFaces		// Numero de indices a UV coords
+		m_vertexData,			// vertices
+		m_numVertex,			// Numero de vertices
+		m_normalsData,			// Normales
+		m_numFaces,				// Numero de normales
+		m_vertexData,			// UV coords
+		m_numVertex,			// Numero de UV coords
+		m_vertexIndex,			// Indices de vertices
+		m_numFaces,				// Numero de vertices
+		m_normalsIndex,			// Indices a normales
+		m_numFaces,				// Numero de indices a normales
+		m_vertexIndex,			// Indices a las UV coords
+		m_numFaces				// Numero de indices a UV coords
 	);
 
 	if (!loaded)
@@ -565,14 +569,14 @@ void CAppGeometria::CreateToroid(int CentralRadius, int OutRadius, int Horizonta
 	float v1v3[3], v1v2[3], normal[3];
 
 	//Numero de vertices
-	m_vData = new float[m_numVertex * 3];
+	m_vertexData = new float[m_numVertex * 3];
 	//Indices de los vertices
-	m_vIndices = new unsigned short[m_numFaces * 3];
+	m_vertexIndex = new unsigned short[m_numFaces * 3];
 
 	//Normales
-	m_nData = new float[m_numFaces * 3];
+	m_normalsData = new float[m_numFaces * 3];
 	//Indices de las normales
-	m_nIndices = new unsigned short[m_numFaces * 3];
+	m_normalsIndex = new unsigned short[m_numFaces * 3];
 
 	//--------------------------------------------------------
 	//Calculo las posiciones de los vertices
@@ -583,9 +587,9 @@ void CAppGeometria::CreateToroid(int CentralRadius, int OutRadius, int Horizonta
 	//Le asigno el valor 0 a todos los indices
 	for (int i = 0; i < m_numFaces; i += 3)
 	{
-		m_nData[i] = 0.0f;
-		m_nData[i + 1] = 0.0f;
-		m_nData[i + 2] = 0.0f;
+		m_normalsData[i] = 0.0f;
+		m_normalsData[i + 1] = 0.0f;
+		m_normalsData[i + 2] = 0.0f;
 	}
 
 	//Le asigno el valor de nIndex a cada normal
@@ -593,9 +597,9 @@ void CAppGeometria::CreateToroid(int CentralRadius, int OutRadius, int Horizonta
 
 	for (int i = 0; i < m_numFaces * 3; i += 3)
 	{
-		m_nIndices[i] = nIndex;
-		m_nIndices[i + 1] = nIndex;
-		m_nIndices[i + 2] = nIndex;
+		m_normalsIndex[i] = nIndex;
+		m_normalsIndex[i + 1] = nIndex;
+		m_normalsIndex[i + 2] = nIndex;
 
 		nIndex++;
 	}
@@ -604,18 +608,55 @@ void CAppGeometria::CreateToroid(int CentralRadius, int OutRadius, int Horizonta
 	loaded = getOpenGLRenderer()->allocateGraphicsMemoryForObject(
 		&m_shaderID,
 		&m_geoVAOID,
-		m_vData,		// vertices
+		m_vertexData,		// vertices
 		m_numVertex,	// Numero de vertices
-		m_nData,		// Normales
+		m_normalsData,		// Normales
 		m_numFaces,		// Numero de normales
-		m_vData,		// UV coords
+		m_vertexData,		// UV coords
 		m_numVertex,	// Numero de UV coords
-		m_vIndices,		// Indices de vertices
+		m_vertexIndex,		// Indices de vertices
 		m_numFaces,		// Numero de vertices
-		m_nIndices,		// Indices a normales
+		m_normalsIndex,		// Indices a normales
 		m_numFaces,		// Numero de indices a normales
-		m_vIndices,		// Indices a las UV coords
+		m_vertexIndex,		// Indices a las UV coords
 		m_numFaces		// Numero de indices a UV coords
+	);
+
+	if (!loaded)
+	{
+		m_geoVAOID = 0;
+	}
+}
+
+void CAppGeometria::LoadMesh()
+{
+	bool loaded = false;
+
+	C3DModel_FBX object;
+	
+	if (!object.loader("Pyro_Head_Ascii.fbx"))
+	{
+		m_geoVAOID = 0;
+	}
+
+	m_numFaces = object.getNumVertices();
+
+	//----------------------------------------------------------------------------------
+	loaded = getOpenGLRenderer()->allocateGraphicsMemoryForObject(
+		&m_shaderID,
+		&m_geoVAOID,
+		object.getModelVertices(),
+		m_numFaces,
+		object.getModelNormals(),
+		object.getNumNormals() / 3,
+		object.getModelUVCoords(),
+		object.getNumUVCoords() / 2,
+		object.getModelVertexIndices(),
+		object.getNumVertexIndices() / 3,
+		object.getModelNormalIndices(),
+		object.getNumNormalsIndices() / 3,
+		object.getModelUVCoordIndices(),
+		object.getNumUVIndices() / 3
 	);
 
 	if (!loaded)

@@ -55,6 +55,7 @@ public:
 	int getNumNormals() const { return m_numNormals; }
 	int getNumUVCoords() const { return m_numUVCoords; }
 	int getNumFaces() const { return m_numFaces; }
+
 	float * const getModelVertices() { return m_verticesRaw; }
 	float * const getModelNormals() { return m_normalsRaw; }
 	float * const getModelUVCoords() { return m_uvCoordsRaw; }
