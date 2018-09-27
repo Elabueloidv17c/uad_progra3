@@ -13,7 +13,8 @@ CAppGeometria::CAppGeometria() :
 
 	m_geoVAOID = 0;
 	m_shaderID = 0;
-	
+	m_textureID = nullptr;
+
 	m_numNormals = 0;
 	m_numFaces = 0;
 	m_numVertex = 0;
@@ -47,6 +48,7 @@ CAppGeometria::CAppGeometria(int window_width, int window_height) :
 
 	m_geoVAOID = 0;
 	m_shaderID = 0;
+	m_textureID = nullptr;
 
 	m_numNormals = 0;
 	m_numFaces = 0;
@@ -134,7 +136,7 @@ void CAppGeometria::initialize()
 
 	if (m_shaderID > 0)
 	{
-		//CreatePiramid();
+		//CreatePyramid();
 		//CreateSphere(2, 8, 8);
 		LoadMesh();
 	}
@@ -268,7 +270,7 @@ void CAppGeometria::executeMenuAction()
 	}
 }
 
-void CAppGeometria::CreatePiramid()
+void CAppGeometria::CreatePyramid()
 {
 	bool loaded = false;
 	float h = 2.5f;
@@ -339,7 +341,10 @@ void CAppGeometria::CreatePiramid()
 	if (!loaded)
 	{
 		m_geoVAOID = 0;
+		cout << "Pyramid not loaded correctly" << endl;
 	}
+
+	cout << "Creating pyramid" << endl;
 }
 
 void CAppGeometria::CreateSphere(float Radius, int Horizontal, int Vertical)
@@ -536,7 +541,10 @@ void CAppGeometria::CreateSphere(float Radius, int Horizontal, int Vertical)
 	if (!loaded)
 	{
 		m_geoVAOID = 0;
+		cout << "Sphere not loaded correctly" << endl;
 	}
+
+	cout << "Creating sphere" << endl;
 }
 
 void CAppGeometria::CreateToroid(int CentralRadius, int OutRadius, int Horizontal, int Vertical)
@@ -625,7 +633,10 @@ void CAppGeometria::CreateToroid(int CentralRadius, int OutRadius, int Horizonta
 	if (!loaded)
 	{
 		m_geoVAOID = 0;
+		cout << "Toroid not loaded correctly" << endl;
 	}
+
+	cout << "Creating Toroid" << endl;
 }
 
 void CAppGeometria::LoadMesh()
@@ -634,9 +645,10 @@ void CAppGeometria::LoadMesh()
 
 	C3DModel_FBX object;
 	
-	if (!object.loader("Pyro_Head_Ascii.fbx"))
+	if (!object.loader("GeoSphere_Ascii.fbx"))
 	{
 		m_geoVAOID = 0;
+		cout << "File not found" << endl;
 	}
 
 	m_numFaces = object.getNumVertices();
@@ -662,5 +674,68 @@ void CAppGeometria::LoadMesh()
 	if (!loaded)
 	{
 		m_geoVAOID = 0;
+		cout << "Couldn't read mesh correctly" << endl;
 	}
+
+	cout << "Finished reading 3D model" << endl;
+	cout << "Vertices: " << m_numFaces / 3 << endl;
+	cout << "Normals: " << object.getNumNormals() / 3 << endl;
+	cout << "UVCoords: " << object.getNumUVCoords() / 2 << endl;
+}
+
+bool CAppGeometria::loadTexture(const char *filename, unsigned int *newTextureID)
+{
+	TGAFILE tgaFile;
+	tgaFile.imageData = nullptr;
+
+	if (filename == nullptr || newTextureID == nullptr)
+	{
+		return false;
+	}
+
+	*newTextureID = 0;
+
+	if (LoadTGAFile(filename, &tgaFile))
+	{
+		if (tgaFile.imageData == nullptr ||
+			tgaFile.imageHeight < 0 ||
+			tgaFile.imageWidth < 0)
+		{
+			if (tgaFile.imageData != nullptr)
+			{
+				delete[] tgaFile.imageData;
+			}
+
+			return false;
+		}
+
+		// Create a texture object for the menu, and copy the texture data to graphics memory
+		if (!getOpenGLRenderer()->createTextureObject(
+			newTextureID,
+			tgaFile.imageData,
+			tgaFile.imageWidth,
+			tgaFile.imageHeight
+		))
+		{
+			return false;
+		}
+
+		// Texture data is stored in graphics memory now, we don't need this copy anymore
+		if (tgaFile.imageData != nullptr)
+		{
+			delete[] tgaFile.imageData;
+		}
+	}
+	else
+	{
+		// Free texture data
+		if (tgaFile.imageData != nullptr)
+		{
+			delete[] tgaFile.imageData;
+		}
+
+		return false;
+	}
+
+	return true;
 }

@@ -4,9 +4,10 @@
 #ifndef CAPPEMPTY_H
 #define CAPPEMPTY_H
 
-#include "Globals.h"
-#include "CApp.h"
+#include "../Include/Globals.h"
+#include "../Include/CApp.h"
 #include "../Include/C3DModel_FBX.h"
+#include "../Include/LoadTGA.h"
 
 class CAppGeometria : public CApp
 {
@@ -14,6 +15,7 @@ private:
 
 	unsigned int m_shaderID;
 	unsigned int m_geoVAOID;
+	unsigned int* m_textureID;
 
 	int m_numFaces;
 	int m_numVertex;
@@ -55,9 +57,11 @@ public:
 private:
 
 	void LoadMesh();
-	void CreatePiramid();
+	void CreatePyramid();
 	void CreateSphere(float Radius, int Horizontal, int Vertical);
 	void CreateToroid(int CentralRadius, int OutRadius, int Horizontal, int Vertical);
+
+	bool loadTexture(const char *filename, unsigned int *newTextureID);
 
 };
 

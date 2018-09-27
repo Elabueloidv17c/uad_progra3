@@ -90,7 +90,7 @@ bool C3DModel_FBX::parser(std::string dataToFind, int &arraySize, float* &arrayD
 
 	if (arrayDestination == nullptr)
 	{
-		arrayDestination = new float[arraySize];
+		arrayDestination = new float[arraySize * sizeof(unsigned short)];
 	}
 
 	else
@@ -130,7 +130,7 @@ bool C3DModel_FBX::parser(std::string dataToFind, int &arraySize, unsigned short
 	size_t posFin = m_file.find(' ', posIni);
 
 	arraySize = stoi(m_file.substr(posIni, posFin - posIni));
-	arrayDestination = new unsigned short[arraySize];
+	arrayDestination = new unsigned short[arraySize * sizeof(float)];
 
 	posIni = m_file.find("a: ", posFin) + 3;
 	posFin = m_file.find('}', posFin);
