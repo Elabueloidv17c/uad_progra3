@@ -13,7 +13,6 @@ private:
 
 	int m_numVerticesIndex, m_numNormalsIndex, m_numUVIndex;
 
-
 	bool loadFromFile(const char* const filename);
 	bool parser(std::string dataToFind, int &arraySize, float* &arrayDestination);
 	bool parser(std::string dataToFind, int &arraySize, unsigned short* &arrayDestination);

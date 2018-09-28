@@ -15,7 +15,7 @@ private:
 
 	unsigned int m_shaderID;
 	unsigned int m_geoVAOID;
-	unsigned int* m_textureID;
+	unsigned int m_textureID;
 
 	int m_numFaces;
 	int m_numVertex;
@@ -56,13 +56,12 @@ public:
 
 private:
 
-	void LoadMesh();
 	void CreatePyramid();
+	void LoadMesh(std::string filename);
 	void CreateSphere(float Radius, int Horizontal, int Vertical);
 	void CreateToroid(int CentralRadius, int OutRadius, int Horizontal, int Vertical);
-
-	bool loadTexture(const char *filename, unsigned int *newTextureID);
-
+	bool readTexture(const char *filename, unsigned int *newTextureID);
+	void loadTexture(std::string textureName);
 };
 
 #endif

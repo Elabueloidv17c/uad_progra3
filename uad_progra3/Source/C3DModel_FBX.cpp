@@ -1,5 +1,7 @@
 #include "../stdafx.h"
 
+#include <windows.h>
+
 #include <iostream>
 #include <fstream>
 #include <sstream>

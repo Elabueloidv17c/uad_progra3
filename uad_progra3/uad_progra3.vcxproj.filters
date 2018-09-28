@@ -99,6 +99,9 @@
     <ClInclude Include="Include\C3DModel_FBX.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\CTextureManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -165,6 +168,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\C3DModel_FBX.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\CTextureManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

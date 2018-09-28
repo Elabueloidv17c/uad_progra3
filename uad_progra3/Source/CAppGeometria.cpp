@@ -13,7 +13,7 @@ CAppGeometria::CAppGeometria() :
 
 	m_geoVAOID = 0;
 	m_shaderID = 0;
-	m_textureID = nullptr;
+	m_textureID = 0;
 
 	m_numNormals = 0;
 	m_numFaces = 0;
@@ -24,8 +24,6 @@ CAppGeometria::CAppGeometria() :
 	m_objectPosition = CVector3::ZeroVector();
 	m_rotationSpeed = DEFAULT_ROTATION_SPEED;
 
-	m_geoVAOID = 0;
-	m_shaderID = 0;
 	m_currentDeltaTime = 0;
 	m_objectRotation = 0;
 
@@ -48,7 +46,7 @@ CAppGeometria::CAppGeometria(int window_width, int window_height) :
 
 	m_geoVAOID = 0;
 	m_shaderID = 0;
-	m_textureID = nullptr;
+	m_textureID = 0;
 
 	m_numNormals = 0;
 	m_numFaces = 0;
@@ -138,7 +136,8 @@ void CAppGeometria::initialize()
 	{
 		//CreatePyramid();
 		//CreateSphere(2, 8, 8);
-		LoadMesh();
+		LoadMesh("Vato_guapo");
+		loadTexture("Pyro_red");
 	}
 
 }
@@ -216,7 +215,6 @@ void CAppGeometria::render()
 	else // Otherwise, render app-specific stuff here...
 	{
 		float color[3] = { 1.0f, 1.0f, 1.0f };
-		unsigned int noTexture = 0;
 
 		// convert total degrees rotated to radians;
 		double totalDegreesRotatedRadians = m_objectRotation * 3.1459 / 180.0;
@@ -230,7 +228,7 @@ void CAppGeometria::render()
 			getOpenGLRenderer()->renderObject(
 				&m_shaderID,
 				&m_geoVAOID,
-				&noTexture,
+				&m_textureID,
 				m_numFaces,
 				color,
 				&modelMatrix,
@@ -639,21 +637,24 @@ void CAppGeometria::CreateToroid(int CentralRadius, int OutRadius, int Horizonta
 	cout << "Creating Toroid" << endl;
 }
 
-void CAppGeometria::LoadMesh()
+void CAppGeometria::LoadMesh(std::string filename)
 {
 	bool loaded = false;
 
 	C3DModel_FBX object;
-	
-	if (!object.loader("GeoSphere_Ascii.fbx"))
+
+	std::string mesh = "Resources/MEDIA/MODELS/FBX/" + filename + ".fbx";
+	const char* meshPath = &mesh[0];
+
+	if (!object.loader(meshPath))
 	{
 		m_geoVAOID = 0;
-		cout << "File not found" << endl;
+		cout << "Mesh not found" << endl;
 	}
 
-	m_numFaces = object.getNumVertices();
-
 	//----------------------------------------------------------------------------------
+	m_numFaces = object.getNumVertexIndices() / 3;
+
 	loaded = getOpenGLRenderer()->allocateGraphicsMemoryForObject(
 		&m_shaderID,
 		&m_geoVAOID,
@@ -678,12 +679,12 @@ void CAppGeometria::LoadMesh()
 	}
 
 	cout << "Finished reading 3D model" << endl;
-	cout << "Vertices: " << m_numFaces / 3 << endl;
+	cout << "Vertices: " << m_numFaces << endl;
 	cout << "Normals: " << object.getNumNormals() / 3 << endl;
 	cout << "UVCoords: " << object.getNumUVCoords() / 2 << endl;
 }
 
-bool CAppGeometria::loadTexture(const char *filename, unsigned int *newTextureID)
+bool CAppGeometria::readTexture(const char *filename, unsigned int *newTextureID)
 {
 	TGAFILE tgaFile;
 	tgaFile.imageData = nullptr;
@@ -738,4 +739,18 @@ bool CAppGeometria::loadTexture(const char *filename, unsigned int *newTextureID
 	}
 
 	return true;
+}
+
+void CAppGeometria::loadTexture(std::string textureName)
+{
+	bool loaded = false;
+
+	std::string texture = "Resources/MEDIA/TEXTURES/" + textureName + ".tga";
+	const char* texturePath = &texture[0];
+
+	if (!readTexture(texturePath, &m_textureID))
+	{
+		m_textureID = 0;
+		cout << "Texture not found" << endl;
+	}
 }

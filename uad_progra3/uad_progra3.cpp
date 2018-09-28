@@ -14,11 +14,11 @@ using namespace std;
 
 int main()
 {
-	CApp *app = NULL;                  // Pointer to BASE class CApp
-	app = new CAppGeometria(800, 600); // Using pointer to base class, create a new object of DERIVED class
-	app->run();                        // Run the app
-	delete app;                        // Delete pointer
-	app = NULL;                        // Set pointer to NULL
+	CApp *app = NULL;					// Pointer to BASE class CApp
+	app = new CAppParcial2(800, 600);	// Using pointer to base class, create a new object of DERIVED class
+	app->run();							// Run the app
+	delete app;							// Delete pointer
+	app = NULL;							// Set pointer to NULL
 
 	return 0;
 }
